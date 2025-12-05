@@ -50,17 +50,18 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
-
 class CustomUser(AbstractUser):
     username = None  # исключаем заполнение поля при создании экземпляра модели
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     email = models.EmailField(unique=True)
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
 
-    USERNAME_FIELD = 'email'  # поле будет использовано для авторизации
-    REQUIRED_FIELDS = ['first_name',
-                       'last_name']  # обязательные поля, которые должны быть указаны при создании суперпользователя через команду createsuperuser
+    USERNAME_FIELD = "email"  # поле будет использовано для авторизации
+    REQUIRED_FIELDS = [
+        "first_name",
+        "last_name",
+    ]  # обязательные поля, которые должны быть указаны при создании суперпользователя через команду createsuperuser
 
     objects: CustomUserManager = CustomUserManager()
 
