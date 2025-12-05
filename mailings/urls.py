@@ -5,7 +5,7 @@ from mailings.apps import MailingsConfig
 
 app_name = MailingsConfig.name
 
-# urlpatterns = [
+urlpatterns = [
 #     path("", ListView.as_view(), name="home"),
 #     path("contacts/", TemplateView.as_view(), name="contacts"),
 #     path("product/<int:pk>/", cache_page(60)(DetailView.as_view()), name="product"),
@@ -13,4 +13,4 @@ app_name = MailingsConfig.name
 #     path("product/<int:pk>/edit/", UpdateView.as_view(), name="product_edit"),
 #     path("product/<int:pk>/confirm_delete/", DeleteView.as_view(), name="product_confirm_delete"),
 #     path("product/<int:pk>/unpublish/", UnpublishView.as_view(), name="unpublish_product"),
-# ]
+]
