@@ -1,14 +1,13 @@
 from django.urls import path
 from django.views.decorators.cache import cache_page
 
+from mailings import views
 from mailings.apps import MailingsConfig
-
-# from catalog.views import
 
 app_name = MailingsConfig.name
 
 urlpatterns = [
-    #     path("", ListView.as_view(), name="home"),
+    path("", views.index, name="index"),
     #     path("contacts/", TemplateView.as_view(), name="contacts"),
     #     path("product/<int:pk>/", cache_page(60)(DetailView.as_view()), name="product"),
     #     path("product/new/", CreateView.as_view(), name="product_create"),
