@@ -41,7 +41,7 @@ class Message(models.Model):
         CustomUser, on_delete=models.CASCADE, verbose_name="Владелец", related_name="messages"
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.subject
 
     class Meta:
@@ -76,8 +76,8 @@ class Mailing(models.Model):
         CustomUser, on_delete=models.CASCADE, verbose_name="Владелец", related_name="mailings"
     )
 
-    def __str__(self):
-        return f"Старт: {self.start_time} Окончание: {self.end_time} Статус:{self.status}"
+    def __str__(self) -> str:
+        return f"Старт: {self.start_time} Окончание: {self.end_time} Статус:{self.get_status_display()}"
 
     class Meta:
         verbose_name = "рассылка"
@@ -104,8 +104,8 @@ class MailingAttempt(models.Model):
     )
     recipient: Recipient = models.ForeignKey(Recipient, on_delete=models.CASCADE, verbose_name="Получатель")
 
-    def __str__(self):
-        return f"{self.mailing} — {self.status} — {self.attempt_time}"
+    def __str__(self) -> str:
+        return f"{self.mailing} — {self.get_status_display()} — {self.attempt_time}"
 
     class Meta:
         verbose_name = "попытка рассылки"
