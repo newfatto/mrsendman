@@ -25,14 +25,7 @@ class CustomUserCreationForm(StyleFormMixin, UserCreationForm):
 
     class Meta:
         model = CustomUser
-        fields = (
-            "email",
-            "password1",
-            "password2",
-            "first_name",
-            "last_name",
-            "avatar"
-        )
+        fields = ("email", "password1", "password2", "first_name", "last_name", "avatar")
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -77,14 +70,10 @@ class UserUpdateForm(StyleFormMixin, forms.ModelForm):
     """
     Форма обновления информации о пользователе.
     """
+
     class Meta:
         model = CustomUser
-        fields = (
-            "email",
-            "first_name",
-            "last_name",
-            "avatar"
-        )
+        fields = ("email", "first_name", "last_name", "avatar")
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)

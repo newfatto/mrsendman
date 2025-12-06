@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="container">
+    <div class="form-page">
+        <div class="form-card">
+            <h2 class="form-title">Личный кабинет</h2>
+
+            <p class="mb-3">Здравствуйте, {{ request.user.first_name|default:request.user.email }}!</p>
+
+            <ul class="list-unstyled mb-3">
+                <li>Получателей: {{ recipients_count }}</li>
+                <li>Писем: {{ messages_count }}</li>
+                <li>Рассылок: {{ mailings_count }}</li>
+            </ul>
+
+            <div class="d-flex flex-column gap-2">
+                <a href="#" class="btn btn-outline-secondary w-100">Мои получатели</a>
+                <a href="#" class="btn btn-outline-secondary w-100">Мои письма</a>
+                <a href="#" class="btn btn-outline-secondary w-100">Мои рассылки</a>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="container">
+    <div class="form-page">
+        <div class="form-card">
+            <h2 class="form-title">Вход на сайт</h2>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {{ form.as_p }}
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-secondary w-100">
+                        Войти
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+{% endblock %}
