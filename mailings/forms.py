@@ -60,3 +60,23 @@ class RecipientForm(StyleFormMixin, forms.ModelForm):
             self.save_m2m()
 
         return recipient
+
+#
+# class MessageForm(forms.ModelForm):
+#     """
+#     Форма создания/редактирования письма.
+#     Владелец (owner) подставляется из текущего пользователя.
+#     """
+#
+#     class Meta:
+#         model = Message
+#         fields = ("subject", "content",)
+#         labels = {
+#             "subject": "Тема письма",
+#             "content": "Текст письма",
+#         }
+#         widgets = {
+#             "content": forms.Textarea(attrs={"rows": 10}),
+#         }
+
+
