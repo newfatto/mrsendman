@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Редактирование письма{% endblock %}
+
+{% block content %}
+<main class="container">
+    <div class="form-page">
+        <div class="form-card">
+
+            <h2 class="form-title">Редактирование письма</h2>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {{ form.as_p }}
+
+                <div class="form-actions">
+                    <button type="submit"
+                            class="btn custom-main-btn w-100">
+                        сохранить письмо
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-3">
+                <a href="{% url 'mailings:message_confirm_delete' message.pk %}"
+                   class="btn custom-outline-btn w-100">
+                    удалить письмо
+                </a>
+            </div>
+
+        </div>
+    </div>
+</main>
+{% endblock %}

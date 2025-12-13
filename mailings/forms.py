@@ -1,6 +1,8 @@
+from typing import Any
+
 from django import forms
 
-from mailings.models import Recipient, Message, Mailing, MailingAttempt
+from mailings.models import Mailing, MailingAttempt, Message, Recipient
 from users.models import CustomUser
 
 
@@ -18,7 +20,39 @@ class StyleFormMixin:
                 field.widget.attrs["class"] = f"{existing_classes} form-control".strip()
 
 
-class RecipientForm(StyleFormMixin, forms.ModelForm):
+class OwnerFormMixin:
+    """
+    Миксин для ModelForm, который:
+    - принимает параметр user при инициализации,
+    - при сохранении подставляет этого пользователя в поле owner модели.
+    """
+
+    user: CustomUser | None
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        self.user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+
+    def save(self, commit: bool = True):
+        """
+        Сохраняет объект, подставляя owner из self.user, если:
+        - self.user передан,
+        - у объекта есть атрибут owner.
+        """
+        obj = super().save(commit=False)
+
+        if self.user is not None and hasattr(obj, "owner"):
+            obj.owner = self.user
+
+        if commit:
+            obj.save()
+            if hasattr(self, "save_m2m"):
+                self.save_m2m()
+
+        return obj
+
+
+class RecipientForm(OwnerFormMixin, StyleFormMixin, forms.ModelForm):
     """
     Форма создания/редактирования получателя рассылки.
     Владелец (owner) подставляется из текущего пользователя.
@@ -40,43 +74,40 @@ class RecipientForm(StyleFormMixin, forms.ModelForm):
         """
         Инициализация формы.
         """
-        self.user: CustomUser | None = kwargs.pop("user", None)
+
         super().__init__(*args, **kwargs)
+
         self.fields["email"].widget.attrs.update({"placeholder": "email"})
         self.fields["full_name"].widget.attrs.update({"placeholder": "Фамилия Имя Отчество"})
         self.fields["comment"].widget.attrs.update({"placeholder": "Комментарий"})
 
-    def save(self, commit: bool = True) -> Recipient:
+
+class MessageForm(StyleFormMixin, forms.ModelForm):
+    """
+    Форма создания/редактирования письма.
+    Владелец (owner) подставляется из текущего пользователя.
+    """
+
+    class Meta:
+        model = Message
+        fields = (
+            "subject",
+            "content",
+        )
+        labels = {
+            "subject": "Тема письма",
+            "content": "Текст письма",
+        }
+        widgets = {
+            "content": forms.Textarea(attrs={"rows": 10}),
+        }
+
+    def __init__(self, *args, **kwargs):
         """
-        Сохраняет получателя, подставляя owner из self.user, если он передан.
+        Инициализация формы.
         """
-        recipient: Recipient = super().save(commit=False)
 
-        if self.user is not None:
-            recipient.owner = self.user
+        super().__init__(*args, **kwargs)
 
-        if commit:
-            recipient.save()
-            self.save_m2m()
-
-        return recipient
-
-#
-# class MessageForm(forms.ModelForm):
-#     """
-#     Форма создания/редактирования письма.
-#     Владелец (owner) подставляется из текущего пользователя.
-#     """
-#
-#     class Meta:
-#         model = Message
-#         fields = ("subject", "content",)
-#         labels = {
-#             "subject": "Тема письма",
-#             "content": "Текст письма",
-#         }
-#         widgets = {
-#             "content": forms.Textarea(attrs={"rows": 10}),
-#         }
-
-
+        self.fields["subject"].widget.attrs.update({"placeholder": "введите тему"})
+        self.fields["content"].widget.attrs.update({"placeholder": "текст письма"})
