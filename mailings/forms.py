@@ -1,6 +1,8 @@
 from typing import Any
 
 from django import forms
+from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 from mailings.models import Mailing, MailingAttempt, Message, Recipient
 from users.models import CustomUser
@@ -111,3 +113,55 @@ class MessageForm(StyleFormMixin, forms.ModelForm):
 
         self.fields["subject"].widget.attrs.update({"placeholder": "введите тему"})
         self.fields["content"].widget.attrs.update({"placeholder": "текст письма"})
+
+
+class MailingForm(OwnerFormMixin, StyleFormMixin, forms.ModelForm):
+    """
+    Форма создания/редактирования рассылки.
+    Владелец (owner) подставляется из текущего пользователя.
+    """
+
+    class Meta:
+        model = Mailing
+        fields = ("start_time", "end_time", "message", "recipients")
+        labels = {
+            "start_time": "Время старта рассылки",
+            "end_time": "Время окончания рассылки",
+            "message": "Письмо",
+            "recipients": "Получатели"
+        }
+
+    def __init__(self, *args, **kwargs):
+        """
+        Инициализация формы.
+        """
+
+        super().__init__(*args, **kwargs)
+
+        self.fields["start_time"].widget.attrs.update({"placeholder": "время старта рассылки"})
+        self.fields["end_time"].widget.attrs.update({"placeholder": "время окончания рассылки"})
+
+        if self.user is not None:
+            self.fields["message"].queryset = Message.objects.filter(owner=self.user)
+            self.fields["recipients"].queryset = Recipient.objects.filter(owner=self.user)
+
+    def clean(self) -> dict[str, Any]:
+        """
+        Общая валидация:
+        - start_time не может быть в прошлом
+        - start_time должен быть раньше end_time
+        """
+
+        cleaned_data = super().clean()
+
+        start_time = cleaned_data.get('start_time')
+        end_time = cleaned_data.get('end_time')
+
+        now = timezone.now()
+
+        if start_time and start_time < now:
+            self.add_error('start_time', "Время старта не может быть в прошлом")
+        if start_time and end_time and start_time >= end_time:
+            self.add_error('end_time', "Время окончания должно быть позже времени старта")
+
+        return cleaned_data

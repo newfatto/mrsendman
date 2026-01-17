@@ -2,7 +2,6 @@ from typing import Final
 
 from django.db import models
 from django.utils import timezone
-from django.core.exceptions import ValidationError
 
 from users.models import CustomUser
 
