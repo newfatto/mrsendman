@@ -14,29 +14,16 @@ class Recipient(models.Model):
     которым могут отправляться письма в рамках рассылок.
     """
 
-    email: str = models.EmailField(
-        max_length=50,
-        unique=True)
+    email: str = models.EmailField(max_length=50, unique=True)
 
-    full_name: str = models.CharField(
-        max_length=150,
-        verbose_name="Фамилия Имя Отчество"
-    )
+    full_name: str = models.CharField(max_length=150, verbose_name="Фамилия Имя Отчество")
 
-    comment: str = models.TextField(
-        verbose_name="Комментарий"
-    )
+    comment: str = models.TextField(verbose_name="Комментарий")
 
-    created_at: models.DateTimeField = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Дата создания"
-    )
+    created_at: models.DateTimeField = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
 
     owner: CustomUser = models.ForeignKey(
-        CustomUser,
-        on_delete=models.CASCADE,
-        verbose_name="Владелец",
-        related_name="recipients"
+        CustomUser, on_delete=models.CASCADE, verbose_name="Владелец", related_name="recipients"
     )
 
     def __str__(self):
@@ -54,25 +41,14 @@ class Message(models.Model):
     Хранит тему, текст письма и владельца.
     """
 
-    subject: str = models.CharField(
-        max_length=200,
-        verbose_name="Тема письма"
-    )
+    subject: str = models.CharField(max_length=200, verbose_name="Тема письма")
 
-    content: str = models.TextField(
-        verbose_name="Текст письма"
-    )
+    content: str = models.TextField(verbose_name="Текст письма")
 
-    created_at: models.DateTimeField = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Дата создания"
-    )
+    created_at: models.DateTimeField = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
 
     owner: CustomUser = models.ForeignKey(
-        CustomUser,
-        on_delete=models.CASCADE,
-        verbose_name="Владелец",
-        related_name="messages"
+        CustomUser, on_delete=models.CASCADE, verbose_name="Владелец", related_name="messages"
     )
 
     def __str__(self) -> str:
@@ -101,39 +77,24 @@ class Mailing(models.Model):
         (STATUS_FINISHED, "Завершена"),
     ]
 
-    start_time: models.DateTimeField = models.DateTimeField(
-        verbose_name="Время старта",
-        null=False,
-        blank=False)
+    start_time: models.DateTimeField = models.DateTimeField(verbose_name="Время старта", null=False, blank=False)
 
-    end_time: models.DateTimeField = models.DateTimeField(
-        verbose_name="Время окончания",
-        null=False,
-        blank=False)
+    end_time: models.DateTimeField = models.DateTimeField(verbose_name="Время окончания", null=False, blank=False)
 
     status: str = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default=STATUS_CREATED,
-        verbose_name="Статус")
+        max_length=20, choices=STATUS_CHOICES, default=STATUS_CREATED, verbose_name="Статус"
+    )
 
     message: Message = models.ForeignKey(
-        Message, on_delete=models.CASCADE,
-        verbose_name="Письмо",
-        related_name="mailings"
+        Message, on_delete=models.CASCADE, verbose_name="Письмо", related_name="mailings"
     )
 
     recipients: models.ManyToManyField = models.ManyToManyField(
-        Recipient,
-        verbose_name="Получатели",
-        related_name="mailings"
+        Recipient, verbose_name="Получатели", related_name="mailings"
     )
 
     owner: CustomUser = models.ForeignKey(
-        CustomUser,
-        on_delete=models.CASCADE,
-        verbose_name="Владелец",
-        related_name="mailings"
+        CustomUser, on_delete=models.CASCADE, verbose_name="Владелец", related_name="mailings"
     )
 
     def calculate_status(self) -> str:
@@ -159,15 +120,11 @@ class Mailing(models.Model):
         new_status = self.calculate_status()
         if new_status != self.status:
             self.status = new_status
-            self.save(update_fields=['status'])
+            self.save(update_fields=["status"])
         return new_status
 
     def __str__(self) -> str:
-        return (
-            f"Старт: {self.start_time} "
-            f"Окончание: {self.end_time} "
-            f"Статус:{self.calculate_status()}"
-        )
+        return f"Старт: {self.start_time} " f"Окончание: {self.end_time} " f"Статус:{self.calculate_status()}"
 
     class Meta:
         verbose_name = "рассылка"

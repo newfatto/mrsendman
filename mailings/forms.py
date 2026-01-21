@@ -1,8 +1,8 @@
 from typing import Any
 
 from django import forms
-from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from mailings.models import Mailing, MailingAttempt, Message, Recipient
 from users.models import CustomUser
@@ -128,7 +128,7 @@ class MailingForm(OwnerFormMixin, StyleFormMixin, forms.ModelForm):
             "start_time": "Время старта рассылки",
             "end_time": "Время окончания рассылки",
             "message": "Письмо",
-            "recipients": "Получатели"
+            "recipients": "Получатели",
         }
 
     def __init__(self, *args, **kwargs):
@@ -154,14 +154,14 @@ class MailingForm(OwnerFormMixin, StyleFormMixin, forms.ModelForm):
 
         cleaned_data = super().clean()
 
-        start_time = cleaned_data.get('start_time')
-        end_time = cleaned_data.get('end_time')
+        start_time = cleaned_data.get("start_time")
+        end_time = cleaned_data.get("end_time")
 
         now = timezone.now()
 
         if start_time and start_time < now:
-            self.add_error('start_time', "Время старта не может быть в прошлом")
+            self.add_error("start_time", "Время старта не может быть в прошлом")
         if start_time and end_time and start_time >= end_time:
-            self.add_error('end_time', "Время окончания должно быть позже времени старта")
+            self.add_error("end_time", "Время окончания должно быть позже времени старта")
 
         return cleaned_data

@@ -1,13 +1,35 @@
 from typing import Any
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
-from mailings.forms import MessageForm, RecipientForm
+from mailings.forms import MailingForm, MessageForm, RecipientForm
 from mailings.models import Mailing, Message, Recipient
-from users.models import CustomUser
+
+# =============================================================================
+# MIXINS
+# =============================================================================
+
+
+class OwnerQuerySetMixin(LoginRequiredMixin):
+    """
+    Миксин проверяет, является ли пользователь владельцем экземпляра модели,
+    при попытке её просмотра, изменения и удаления.
+    Название поля в полях модели должно быть "owner",
+    но может быть переопределено.
+    """
+
+    owner_field_name = "owner"
+
+    def get_queryset(self) -> Any:
+        qs = super().get_queryset()
+        return qs.filter(**{self.owner_field_name: self.request.user})
+
+
+# =============================================================================
+# INDEX / PUBLIC PAGES
+# =============================================================================
 
 
 class IndexView(TemplateView):
@@ -24,6 +46,26 @@ class IndexView(TemplateView):
         context["mailings_count"] = Mailing.objects.count()
 
         return context
+
+
+# =============================================================================
+# RECIPIENTS
+# =============================================================================
+
+
+class RecipientListView(OwnerQuerySetMixin, ListView):
+    """
+    Просмотр списка получателей в личном кабинете пользователя.
+    Пользователю доступны только те получатели, которых он добавил сам.
+    """
+
+    model = Recipient
+    template_name = "recipients/recipients.html"
+    context_object_name = "recipients"
+    paginate_by = 30
+
+    def get_queryset(self) -> Any:
+        return super().get_queryset().order_by("created_at")
 
 
 class RecipientCreateView(LoginRequiredMixin, CreateView):
@@ -47,7 +89,7 @@ class RecipientCreateView(LoginRequiredMixin, CreateView):
         return kwargs
 
 
-class RecipientDetailView(LoginRequiredMixin, DetailView):
+class RecipientDetailView(OwnerQuerySetMixin, DetailView):
     """
     Просмотр информации о получателе.
     """
@@ -57,22 +99,7 @@ class RecipientDetailView(LoginRequiredMixin, DetailView):
     context_object_name = "recipient"
 
 
-class RecipientListView(ListView):
-    """
-    Просмотр списка получателей в личном кабинете пользователя.
-    Пользователю доступны только те получатели, которых он добавил сам.
-    """
-
-    model = Recipient
-    template_name = "recipients/recipients.html"
-    context_object_name = "recipients"
-    paginate_by = 30
-
-    def get_queryset(self) -> Any:
-        return Recipient.objects.filter(owner=self.request.user).order_by("created_at")
-
-
-class RecipientUpdateView(LoginRequiredMixin, UpdateView):
+class RecipientUpdateView(OwnerQuerySetMixin, UpdateView):
     """
     Редактирование информации о получателе.
     """
@@ -83,19 +110,46 @@ class RecipientUpdateView(LoginRequiredMixin, UpdateView):
     context_object_name = "recipient"
 
     def get_success_url(self):
+        """
+        Переадресация после успешного редактирования на просмотр информации о получаетеле.
+        """
         return reverse("mailings:recipient_detail", args=[self.kwargs.get("pk")])
 
 
-class RecipientDeleteView(LoginRequiredMixin, DeleteView):
+class RecipientDeleteView(OwnerQuerySetMixin, DeleteView):
+    """
+    Удаление получателя.
+    """
+
     model = Recipient
     template_name = "recipients/recipient_confirm_delete.html"
     success_url = reverse_lazy("mailings:recipients")
     context_object_name = "recipient"
 
 
+# =============================================================================
+# MESSAGES
+# =============================================================================
+
+
+class MessageListView(OwnerQuerySetMixin, ListView):
+    """
+    Просмотр списка писем в личном кабинете пользователя.
+    Пользователю доступны только те письма, которые он создал сам.
+    """
+
+    model = Message
+    template_name = "messages/messages.html"
+    context_object_name = "messages"
+    paginate_by = 30
+
+    def get_queryset(self) -> Any:
+        return super().get_queryset().order_by("created_at")
+
+
 class MessageCreateView(LoginRequiredMixin, CreateView):
     """
-    Добавление нового письма
+    Добавление нового письма.
     """
 
     model = Message
@@ -106,15 +160,15 @@ class MessageCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         """
-        Перед сохранением письма проставляем владельца.
+        Перед сохранением письма указываем владельца.
         """
         form.instance.owner = self.request.user
         return super().form_valid(form)
 
 
-class MessageDetailView(LoginRequiredMixin, DetailView):
+class MessageDetailView(OwnerQuerySetMixin, DetailView):
     """
-    Просмотр информации о получателе.
+    Просмотр информации о письме.
     """
 
     model = Message
@@ -122,24 +176,9 @@ class MessageDetailView(LoginRequiredMixin, DetailView):
     context_object_name = "message"
 
 
-class MessageListView(ListView):
+class MessageUpdateView(OwnerQuerySetMixin, UpdateView):
     """
-    Просмотр списка получателей в личном кабинете пользователя.
-    Пользователю доступны только те получатели, которых он добавил сам.
-    """
-
-    model = Message
-    template_name = "messages/messages.html"
-    context_object_name = "messages"
-    paginate_by = 30
-
-    def get_queryset(self) -> Any:
-        return Message.objects.filter(owner=self.request.user).order_by("created_at")
-
-
-class MessageUpdateView(LoginRequiredMixin, UpdateView):
-    """
-    Редактирование информации о получателе.
+    Редактирование письма.
     """
 
     model = Message
@@ -148,11 +187,118 @@ class MessageUpdateView(LoginRequiredMixin, UpdateView):
     context_object_name = "message"
 
     def get_success_url(self):
+        """
+        Переадресация после успешного редактирования на просмотр деталей письма
+        """
         return reverse("mailings:message_detail", args=[self.kwargs.get("pk")])
 
 
-class MessageDeleteView(LoginRequiredMixin, DeleteView):
+class MessageDeleteView(OwnerQuerySetMixin, DeleteView):
+    """
+    Удаление письма.
+    """
+
     model = Message
     template_name = "messages/message_confirm_delete.html"
     success_url = reverse_lazy("mailings:messages")
     context_object_name = "message"
+
+
+# =============================================================================
+# MAILINGS
+# =============================================================================
+
+
+class MailingListView(OwnerQuerySetMixin, ListView):
+    """
+    Просмотр списка рассылок в личном кабинете пользователя.
+    Пользователю доступны только те рассылки, которые он создал сам.
+    """
+
+    model = Mailing
+    template_name = "mailings/mailings.html"
+    context_object_name = "mailings"
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        """
+        Обновление статуса всех рассылок пользователя.
+        Группирование по статусу и добавление их в контектст.
+        """
+        context = super().get_context_data(**kwargs)
+
+        mailings = list(context["mailings"])
+
+        for mailing in mailings:
+            mailing.update_status()
+
+        context["running"] = [m for m in mailings if m.status == Mailing.STATUS_RUNNING]
+        context["created"] = [m for m in mailings if m.status == Mailing.STATUS_CREATED]
+        context["finished"] = [m for m in mailings if m.status == Mailing.STATUS_FINISHED]
+
+        return context
+
+
+class MailingCreateView(LoginRequiredMixin, CreateView):
+    """
+    Создание новой рассылки.
+    """
+
+    model = Mailing
+    form_class = MailingForm
+    template_name = "mailings/mailing_create.html"
+    context_object_name = "mailing"
+    success_url = reverse_lazy("mailings:mailings")
+
+    def get_form_kwargs(self) -> dict[str, Any]:
+        """
+        Подставляет текущего пользователя в форму, чтобы она могла
+        ограничить выбор получателей и писем;
+        автоматически установить владельца рассылки.
+        """
+
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+
+class MailingDetailView(OwnerQuerySetMixin, DetailView):
+    """
+    Просмотр информации о рассылке.
+    """
+
+    model = Mailing
+    template_name = "mailings/mailing_detail.html"
+    context_object_name = "mailing"
+
+    def get_object(self, queryset=None):
+        """
+        Обновляем статус рассылки при просмотре
+        """
+        obj = super().get_object(queryset)
+        obj.update_status()
+        return obj
+
+
+class MailingUpdateView(OwnerQuerySetMixin, UpdateView):
+    """
+    Редактирование рассылки.
+    """
+
+    model = Mailing
+    form_class = MailingForm
+    template_name = "mailings/mailing_update.html"
+    context_object_name = "mailing"
+
+    def get_success_url(self):
+        return reverse("mailings:mailing_detail", args=[self.kwargs.get("pk")])
+
+
+class MailingDeleteView(OwnerQuerySetMixin, DeleteView):
+    """
+    Удаление расссылки.
+    """
+
+    model = Mailing
+    template_name = "mailings/mailing_confirm_delete.html"
+    success_url = reverse_lazy("mailings:mailings")
+    context_object_name = "mailing"
