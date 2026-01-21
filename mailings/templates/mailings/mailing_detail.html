@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Информация о письме{% endblock %}
+{% block content %}
+<main class="container">
+    <div class="form-page">
+        <div class="form-card">
+
+            <h2 class="form-title mb-4">Информация о письме</h2>
+
+            <div class="mb-4">
+                <p><strong>Заголовок:</strong> {{ message.subject }}</p>
+                <p><strong>Текст письма:</strong> {{ message.content }}</p>
+            </div>
+
+            <div class="d-flex flex-column gap-2">
+                <a href="{% url 'mailings:message_update' message.pk %}"
+                   class="btn custom-outline-btn w-100">
+                    изменить письмо
+                </a>
+                <a href="{% url 'mailings:message_confirm_delete' message.pk %}"
+                   class="btn custom-main-btn w-100">
+                    удалить
+                </a>
+            </div>
+
+        </div>
+    </div>
+</main>
+{% endblock %}

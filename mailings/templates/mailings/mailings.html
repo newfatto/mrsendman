@@ -1,0 +1,120 @@
+{# mailings/templates/mailings/mailings.html #}
+{% extends "base.html" %}
+
+{% block title %}Мои рассылки{% endblock %}
+
+{% block content %}
+<main class="container">
+
+    <div class="table-page">
+        <div class="table-card">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="form-title mb-0">Мои рассылки</h2>
+
+                <a href="{% url 'mailings:mailing_create' %}"
+                   class="btn custom-main-btn btn-sm">
+                    Создать рассылку
+                </a>
+            </div>
+
+            {# Вкладки #}
+            <div class="tabs">
+                <a class="tab-link {% if active_status == 'all' %}is-active{% endif %}"
+                   href="{% url 'mailings:mailings' %}">
+                    Все
+                </a>
+
+                <a class="tab-link {% if active_status == 'created' %}is-active{% endif %}"
+                   href="{% url 'mailings:mailings' %}?status=created">
+                    Запланированные
+                </a>
+
+                <a class="tab-link {% if active_status == 'running' %}is-active{% endif %}"
+                   href="{% url 'mailings:mailings' %}?status=running">
+                    Запущенные
+                </a>
+
+                <a class="tab-link {% if active_status == 'finished' %}is-active{% endif %}"
+                   href="{% url 'mailings:mailings' %}?status=finished">
+                    Завершённые
+                </a>
+            </div>
+
+            <div class="table-wrap">
+                <table class="table table-hover table-sm caption-top mb-0">
+                    <caption>Ваши рассылки</caption>
+
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 4%;">#</th>
+                            <th scope="col" style="width: 20%;">Название</th>
+                            <th scope="col" style="width: 12%;">Статус</th>
+                            <th scope="col" style="width: 16%;">Время старта</th>
+                            <th scope="col" style="width: 16%;">Время окончания</th>
+                            <th scope="col" style="width: 16%;">Письмо</th>
+                            <th scope="col" style="width: 16%;">Получатели</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for mailing in mailings %}
+                            <tr>
+                                <th scope="row">{{ forloop.counter }}</th>
+
+                                <td>
+                                    <a href="{% url 'mailings:mailing_detail' mailing.pk %}"
+                                       class="text-decoration-none">
+                                        Рассылка #{{ mailing.pk }}
+                                    </a>
+                                </td>
+
+                                <td>{{ mailing.get_status_display }}</td>
+
+                                <td>{{ mailing.start_time|date:"d.m.Y H:i" }}</td>
+                                <td>{{ mailing.end_time|date:"d.m.Y H:i" }}</td>
+
+                                <td>
+                                    {% if mailing.message %}
+                                        <a href="{% url 'mailings:message_detail' mailing.message.pk %}"
+                                           class="text-decoration-none">
+                                            {{ mailing.message.subject|truncatechars:40 }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% with recipients=mailing.recipients.all %}
+                                        {% if recipients %}
+                                            <div class="d-flex flex-column gap-1">
+                                                {% for r in recipients %}
+                                                    <a href="{% url 'mailings:recipient_detail' r.pk %}"
+                                                       class="text-decoration-none">
+                                                        {{ r.full_name|default:r.email|truncatechars:30 }}
+                                                    </a>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">
+                                    У вас пока нет рассылок.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</main>
+{% endblock %}

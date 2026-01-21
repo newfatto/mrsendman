@@ -56,13 +56,11 @@
                         <span class="dashboard-count">{{ mailings_count }}</span>
                     </div>
                     <div class="d-flex gap-2">
-                        <!-- mailings:mailing_list -->
-                        <a href="#"
+                        <a href="{% url 'mailings:mailings' %}"
                            class="btn btn-sm custom-outline-btn">
                             посмотреть
                         </a>
-                        <!-- mailings:mailing_create -->
-                        <a href="#"
+                        <a href="{% url 'mailings:mailing_create' %}"
                            class="btn btn-sm custom-main-btn">
                             добавить
                         </a>

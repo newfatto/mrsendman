@@ -219,22 +219,27 @@ class MailingListView(OwnerQuerySetMixin, ListView):
     template_name = "mailings/mailings.html"
     context_object_name = "mailings"
 
-    def get_context_data(self, *, object_list=None, **kwargs):
+    def get_queryset(self) -> Any:
         """
         Обновление статуса всех рассылок пользователя.
-        Группирование по статусу и добавление их в контектст.
+        Группировка по статусу.
         """
-        context = super().get_context_data(**kwargs)
+        qs = super().get_queryset().order_by("start_time")
 
-        mailings = list(context["mailings"])
+        mailings = list(qs)
 
         for mailing in mailings:
             mailing.update_status()
 
-        context["running"] = [m for m in mailings if m.status == Mailing.STATUS_RUNNING]
-        context["created"] = [m for m in mailings if m.status == Mailing.STATUS_CREATED]
-        context["finished"] = [m for m in mailings if m.status == Mailing.STATUS_FINISHED]
+        status = self.request.GET.get("status")
+        if status in {Mailing.STATUS_CREATED, Mailing.STATUS_RUNNING, Mailing.STATUS_FINISHED}:
+            mailings = [m for m in mailings if m.status == status]
 
+        return mailings
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["active_status"] = self.request.GET.get("status", "all")
         return context
 
 

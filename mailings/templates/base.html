@@ -127,50 +127,86 @@
         }
 
         /* Более широкая страница для таблиц */
-    .table-page {
+        .table-page {
         max-width: 900px;
         margin: 3rem auto 4rem auto;
-    }
+            }
 
-    .table-card {
+        .table-card {
         background-color: #ffffff;
         border: 1px solid #e5e5e5;
         border-radius: 12px;
         padding: 1.5rem 2rem;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-    }
+        }
 
-    .table caption {
+        .table caption {
         caption-side: top;
         text-align: left;
         font-weight: 600;
         margin-bottom: 0.5rem;
         color: #555;
-    }
+        }
 
-    .table thead th {
+        .table thead th {
         border-bottom-width: 1px;
         color: #666;
         font-weight: 500;
-    }
+        }
 
-    .table td,
-    .table th {
-        vertical-align: middle;
-    }
+        .table td,
+        .table th {
+            vertical-align: middle;
+        }
 
-    /* Кнопки удаления / отмены в карточках */
-    .btn-danger-soft {
+        /* Кнопки удаления / отмены в карточках */
+        .btn-danger-soft {
         background-color: #f8d7da;
         border-color: #f5c2c7;
         color: #842029;
-    }
+        }
 
-    .btn-danger-soft:hover {
+        .btn-danger-soft:hover {
         background-color: #f5c2c7;
         border-color: #f1aeb5;
         color: #58151c;
-    }
+        }
+
+        .tabs {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+        }
+
+        .tab-link {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid #e5e5e5;
+        text-decoration: none;
+        color: #6c757d;
+        background-color: #ffffff;
+        font-weight: 500;
+        font-size: 0.95rem;
+        }
+
+        .tab-link:hover {
+        background-color: #f2f2f2;
+        color: #6c757d;
+        border-color: #6c757d;
+        }
+
+        .tab-link.is-active {
+        background-color: #6c757d;
+        color: #ffffff;
+        border-color: #6c757d;
+        }
+
+
+        .table-wrap {
+        overflow-x: auto;
+        }
 
     </style>
 </head>
