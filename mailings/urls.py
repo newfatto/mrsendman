@@ -1,24 +1,57 @@
 from django.urls import path
-from django.views.decorators.cache import cache_page
 
-from mailings.views import IndexView, RecipientCreateView, RecipientListView, RecipientDeleteView, RecipientDetailView, \
-    RecipientUpdateView
 from mailings.apps import MailingsConfig
+from mailings.views import (
+    IndexView,
+    MailingCreateView,
+    MailingDeleteView,
+    MailingDetailView,
+    MailingListView,
+    MailingUpdateView,
+    MessageCreateView,
+    MessageDeleteView,
+    MessageDetailView,
+    MessageListView,
+    MessageUpdateView,
+    RecipientCreateView,
+    RecipientDeleteView,
+    RecipientDetailView,
+    RecipientListView,
+    RecipientUpdateView,
+)
 
 app_name = MailingsConfig.name
 
 urlpatterns = [
+    # =========================================================================
+    # INDEX
+    # =========================================================================
     path("", IndexView.as_view(), name="index"),
-    path('/recipients/create/', RecipientCreateView.as_view(), name='recipient_create'),
-    path('/recipients/', RecipientListView.as_view(), name='recipients'),
-    path('/recipients/<int:pk>/confirm_delete/', RecipientDeleteView.as_view(), name='recipient_confirm_delete'),
-    path('/recipients/<int:pk>/', RecipientDetailView.as_view(), name='recipient_detail'),
-    path('/recipients/<int:pk>/edit', RecipientUpdateView.as_view(), name='recipient_update'),
 
-    #     path("contacts/", TemplateView.as_view(), name="contacts"),
-    #     path("product/<int:pk>/", cache_page(60)(DetailView.as_view()), name="product"),
-    #     path("product/new/", CreateView.as_view(), name="product_create"),
-    #     path("product/<int:pk>/edit/", UpdateView.as_view(), name="product_edit"),
-    #     path("product/<int:pk>/confirm_delete/", DeleteView.as_view(), name="product_confirm_delete"),
-    #     path("product/<int:pk>/unpublish/", UnpublishView.as_view(), name="unpublish_product"),
+    # =========================================================================
+    # RECIPIENTS
+    # =========================================================================
+    path("recipients/", RecipientListView.as_view(), name="recipients"),
+    path("recipients/create/", RecipientCreateView.as_view(), name="recipient_create"),
+    path("recipients/<int:pk>/", RecipientDetailView.as_view(), name="recipient_detail"),
+    path("recipients/<int:pk>/edit/", RecipientUpdateView.as_view(), name="recipient_update"),
+    path("recipients/<int:pk>/confirm_delete/", RecipientDeleteView.as_view(), name="recipient_confirm_delete"),
+
+    # =========================================================================
+    # MESSAGES
+    # =========================================================================
+    path("messages/", MessageListView.as_view(), name="messages"),
+    path("message/create/", MessageCreateView.as_view(), name="message_create"),
+    path("message/<int:pk>/", MessageDetailView.as_view(), name="message_detail"),
+    path("message/<int:pk>/edit/", MessageUpdateView.as_view(), name="message_update"),
+    path("message/<int:pk>/confirm_delete/", MessageDeleteView.as_view(), name="message_confirm_delete"),
+
+    # =========================================================================
+    # MAILINGS
+    # =========================================================================
+    path("mailings/", MailingListView.as_view(), name="mailings"),
+    path("mailing/create/", MailingCreateView.as_view(), name="mailing_create"),
+    path("mailing/<int:pk>/", MailingDetailView.as_view(), name="mailing_detail"),
+    path("mailing/<int:pk>/edit/", MailingUpdateView.as_view(), name="mailing_update"),
+    path("mailing/<int:pk>/confirm_delete/", MailingDeleteView.as_view(), name="mailing_confirm_delete"),
 ]

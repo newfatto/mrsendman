@@ -1,11 +1,10 @@
 {% extends "base.html" %}
-
 {% block title %}Создание письма{% endblock %}
 {% block content %}
 <main class="container">
     <div class="form-page">
         <div class="form-card">
-            <h2 class="form-title">Добавление получателя</h2>
+            <h2 class="form-title">Создание письма</h2>
 
             <form method="post" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
@@ -14,7 +13,7 @@
 
                 <div class="form-actions">
                     <button type="submit" class="btn btn-secondary w-100">
-                        сохранить получателя
+                        сохранить письмо
                     </button>
                 </div>
             </form>

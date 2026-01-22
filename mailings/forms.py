@@ -1,6 +1,10 @@
-from django import forms
+from typing import Any
 
-from mailings.models import Recipient, Message, Mailing, MailingAttempt
+from django import forms
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+
+from mailings.models import Mailing, MailingAttempt, Message, Recipient
 from users.models import CustomUser
 
 
@@ -18,7 +22,39 @@ class StyleFormMixin:
                 field.widget.attrs["class"] = f"{existing_classes} form-control".strip()
 
 
-class RecipientForm(StyleFormMixin, forms.ModelForm):
+class OwnerFormMixin:
+    """
+    Миксин для ModelForm, который:
+    - принимает параметр user при инициализации,
+    - при сохранении подставляет этого пользователя в поле owner модели.
+    """
+
+    user: CustomUser | None
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        self.user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+
+    def save(self, commit: bool = True):
+        """
+        Сохраняет объект, подставляя owner из self.user, если:
+        - self.user передан,
+        - у объекта есть атрибут owner.
+        """
+        obj = super().save(commit=False)
+
+        if self.user is not None and hasattr(obj, "owner"):
+            obj.owner = self.user
+
+        if commit:
+            obj.save()
+            if hasattr(self, "save_m2m"):
+                self.save_m2m()
+
+        return obj
+
+
+class RecipientForm(OwnerFormMixin, StyleFormMixin, forms.ModelForm):
     """
     Форма создания/редактирования получателя рассылки.
     Владелец (owner) подставляется из текущего пользователя.
@@ -40,43 +76,133 @@ class RecipientForm(StyleFormMixin, forms.ModelForm):
         """
         Инициализация формы.
         """
-        self.user: CustomUser | None = kwargs.pop("user", None)
+
         super().__init__(*args, **kwargs)
+
         self.fields["email"].widget.attrs.update({"placeholder": "email"})
         self.fields["full_name"].widget.attrs.update({"placeholder": "Фамилия Имя Отчество"})
         self.fields["comment"].widget.attrs.update({"placeholder": "Комментарий"})
 
-    def save(self, commit: bool = True) -> Recipient:
+
+class MessageForm(StyleFormMixin, forms.ModelForm):
+    """
+    Форма создания/редактирования письма.
+    Владелец (owner) подставляется из текущего пользователя.
+    """
+
+    class Meta:
+        model = Message
+        fields = (
+            "subject",
+            "content",
+        )
+        labels = {
+            "subject": "Тема письма",
+            "content": "Текст письма",
+        }
+        widgets = {
+            "content": forms.Textarea(attrs={"rows": 10}),
+        }
+
+    def __init__(self, *args, **kwargs):
         """
-        Сохраняет получателя, подставляя owner из self.user, если он передан.
+        Инициализация формы.
         """
-        recipient: Recipient = super().save(commit=False)
+
+        super().__init__(*args, **kwargs)
+
+        self.fields["subject"].widget.attrs.update({"placeholder": "введите тему"})
+        self.fields["content"].widget.attrs.update({"placeholder": "текст письма"})
+
+
+class MailingForm(OwnerFormMixin, StyleFormMixin, forms.ModelForm):
+    """
+    Форма создания/редактирования рассылки.
+    Владелец (owner) подставляется из текущего пользователя.
+    """
+
+    start_time = forms.DateTimeField(
+        label="Время старта рассылки",
+        error_messages={
+            "required": "Укажите дату и время старта рассылки",
+            "invalid": "Введите корректную дату и время",
+        },
+        widget=forms.DateTimeInput(attrs={"type": "datetime-local"}),
+    )
+
+    end_time = forms.DateTimeField(
+        label="Время окончания рассылки",
+        error_messages={
+            "required": "Укажите дату и время окончания рассылки",
+            "invalid": "Введите корректную дату и время",
+        },
+        widget=forms.DateTimeInput(attrs={"type": "datetime-local"}),
+    )
+
+    class Meta:
+        model = Mailing
+        fields = ("start_time", "end_time", "message", "recipients")
+        labels = {
+            "start_time": "Время старта рассылки",
+            "end_time": "Время окончания рассылки",
+            "message": "Письмо",
+            "recipients": "Получатели",
+        }
+
+        widgets = {
+            "start_time": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            "end_time": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            "recipients": forms.SelectMultiple(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        """
+        Инициализация формы:
+        - на UpdateView выставляет initial для datetime-local,
+        - ограничивает выбор message/recipients владельцем,
+        - добавляет подсказку для множественного выбора получателей.
+        """
+
+        super().__init__(*args, **kwargs)
+
+        self.fields["recipients"].help_text = (
+            "Можно выбрать несколько получателей (зажмите Ctrl или Cmd)"
+        )
+        self.fields["recipients"].widget.attrs.update({"size": 6})
+
+        if getattr(self.instance, "pk", None):
+            tz = timezone.get_current_timezone()
+
+            if self.instance.start_time:
+                self.initial["start_time"] = (
+                    self.instance.start_time.astimezone(tz).strftime("%Y-%m-%dT%H:%M")
+                )
+            if self.instance.end_time:
+                self.initial["end_time"] = (
+                    self.instance.end_time.astimezone(tz).strftime("%Y-%m-%dT%H:%M")
+                )
 
         if self.user is not None:
-            recipient.owner = self.user
+            self.fields["message"].queryset = Message.objects.filter(owner=self.user)
+            self.fields["recipients"].queryset = Recipient.objects.filter(owner=self.user)
 
-        if commit:
-            recipient.save()
-            self.save_m2m()
+    def clean(self) -> dict[str, Any]:
+        """
+        Общая валидация:
+        - start_time не может быть в прошлом
+        - start_time должен быть раньше end_time
+        """
 
-        return recipient
+        cleaned_data = super().clean()
 
-#
-# class MessageForm(forms.ModelForm):
-#     """
-#     Форма создания/редактирования письма.
-#     Владелец (owner) подставляется из текущего пользователя.
-#     """
-#
-#     class Meta:
-#         model = Message
-#         fields = ("subject", "content",)
-#         labels = {
-#             "subject": "Тема письма",
-#             "content": "Текст письма",
-#         }
-#         widgets = {
-#             "content": forms.Textarea(attrs={"rows": 10}),
-#         }
+        start_time = cleaned_data.get("start_time")
+        end_time = cleaned_data.get("end_time")
 
+        now = timezone.now()
 
+        if start_time and start_time < now:
+            self.add_error("start_time", "Время старта не может быть в прошлом")
+        if start_time and end_time and start_time >= end_time:
+            self.add_error("end_time", "Время окончания должно быть позже времени старта")
+
+        return cleaned_data
