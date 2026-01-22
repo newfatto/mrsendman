@@ -1,16 +1,15 @@
 {% extends 'base.html' %}
-{% block title %}Удаление письма{% endblock %}
+{% block title %}Удаление рассылки{% endblock %}
 
 {% block content %}
 <main class="container">
     <div class="form-page">
         <div class="form-card">
 
-            <h2 class="form-title mb-3">Удаление письма</h2>
+            <h2 class="form-title mb-3">Удаление рассылки</h2>
 
             <p class="mb-4">
-                Вы действительно хотите удалить письмо
-                <strong>"{{ message.subject }}"</strong>?
+                Вы действительно хотите удалить рассылку?
             </p>
 
             <form method="post" class="d-flex flex-column gap-2">
@@ -18,7 +17,7 @@
                 <button type="submit" class="btn btn-danger-soft w-100">
                     Да, удалить
                 </button>
-                <a href="{% url 'mailings:messages' %}"
+                <a href="{% url 'mailings:mailings' %}"
                    class="btn custom-outline-btn w-100">
                     Отменить
                 </a>

@@ -2,6 +2,8 @@ from typing import Any
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse, reverse_lazy
+from django.http import HttpResponse
+from django.forms import BaseModelForm
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
 from mailings.forms import MailingForm, MessageForm, RecipientForm
@@ -44,6 +46,7 @@ class IndexView(TemplateView):
         context["recipients_count"] = Recipient.objects.count()
         context["messages_count"] = Message.objects.count()
         context["mailings_count"] = Mailing.objects.count()
+        context['mailings_running'] = Mailing.objects.filter(status=Mailing.STATUS_RUNNING).count()
 
         return context
 
@@ -264,6 +267,13 @@ class MailingCreateView(LoginRequiredMixin, CreateView):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
         return kwargs
+
+    def form_valid(self, form: BaseModelForm) -> HttpResponse:
+        """
+        Проставляет владельца рассылки перед сохранением.
+        """
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
 
 
 class MailingDetailView(OwnerQuerySetMixin, DetailView):

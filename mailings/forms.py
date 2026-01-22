@@ -121,6 +121,24 @@ class MailingForm(OwnerFormMixin, StyleFormMixin, forms.ModelForm):
     Владелец (owner) подставляется из текущего пользователя.
     """
 
+    start_time = forms.DateTimeField(
+        label="Время старта рассылки",
+        error_messages={
+            "required": "Укажите дату и время старта рассылки",
+            "invalid": "Введите корректную дату и время",
+        },
+        widget=forms.DateTimeInput(attrs={"type": "datetime-local"}),
+    )
+
+    end_time = forms.DateTimeField(
+        label="Время окончания рассылки",
+        error_messages={
+            "required": "Укажите дату и время окончания рассылки",
+            "invalid": "Введите корректную дату и время",
+        },
+        widget=forms.DateTimeInput(attrs={"type": "datetime-local"}),
+    )
+
     class Meta:
         model = Mailing
         fields = ("start_time", "end_time", "message", "recipients")
@@ -131,15 +149,38 @@ class MailingForm(OwnerFormMixin, StyleFormMixin, forms.ModelForm):
             "recipients": "Получатели",
         }
 
+        widgets = {
+            "start_time": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            "end_time": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            "recipients": forms.SelectMultiple(),
+        }
+
     def __init__(self, *args, **kwargs):
         """
-        Инициализация формы.
+        Инициализация формы:
+        - на UpdateView выставляет initial для datetime-local,
+        - ограничивает выбор message/recipients владельцем,
+        - добавляет подсказку для множественного выбора получателей.
         """
 
         super().__init__(*args, **kwargs)
 
-        self.fields["start_time"].widget.attrs.update({"placeholder": "время старта рассылки"})
-        self.fields["end_time"].widget.attrs.update({"placeholder": "время окончания рассылки"})
+        self.fields["recipients"].help_text = (
+            "Можно выбрать несколько получателей (зажмите Ctrl или Cmd)"
+        )
+        self.fields["recipients"].widget.attrs.update({"size": 6})
+
+        if getattr(self.instance, "pk", None):
+            tz = timezone.get_current_timezone()
+
+            if self.instance.start_time:
+                self.initial["start_time"] = (
+                    self.instance.start_time.astimezone(tz).strftime("%Y-%m-%dT%H:%M")
+                )
+            if self.instance.end_time:
+                self.initial["end_time"] = (
+                    self.instance.end_time.astimezone(tz).strftime("%Y-%m-%dT%H:%M")
+                )
 
         if self.user is not None:
             self.fields["message"].queryset = Message.objects.filter(owner=self.user)

@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Редактирование письма{% endblock %}
+{% block title %}Редактирование рассылки{% endblock %}
 
 {% block content %}
 <main class="container">
     <div class="form-page">
         <div class="form-card">
 
-            <h2 class="form-title">Редактирование письма</h2>
+            <h2 class="form-title">Редактирование рассылки</h2>
 
             <form method="post" novalidate>
                 {% csrf_token %}
@@ -15,15 +15,15 @@
                 <div class="form-actions">
                     <button type="submit"
                             class="btn custom-main-btn w-100">
-                        сохранить письмо
+                        сохранить рассылку
                     </button>
                 </div>
             </form>
 
             <div class="mt-3">
-                <a href="{% url 'mailings:message_confirm_delete' message.pk %}"
+                <a href="{% url 'mailings:mailing_confirm_delete' mailing.pk %}"
                    class="btn custom-outline-btn w-100">
-                    удалить письмо
+                    удалить рассылку
                 </a>
             </div>
 
