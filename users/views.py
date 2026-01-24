@@ -1,9 +1,8 @@
-from typing import Any
+from typing import Any, Literal
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import login
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.views import LoginView, LogoutView
 from django.core.mail import send_mail
@@ -14,7 +13,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views import View
-from django.views.generic import DetailView, TemplateView
+from django.views.generic import DetailView, ListView, TemplateView
 from django.views.generic.edit import CreateView, UpdateView
 
 from mailings.models import Mailing, MailingAttempt, Message, Recipient
@@ -163,3 +162,125 @@ class UserDashboardView(LoginRequiredMixin, TemplateView):
         context["mailings_count"] = Mailing.objects.filter(owner=user).count()
 
         return context
+
+
+class UserListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    """
+    Список пользователей сервиса. Доступно менеджеру.
+    """
+
+    model = CustomUser
+    template_name = "user_list.html"
+    context_object_name = "users"
+    paginate_by = 30
+
+    permission_required = "users.change_customuser"
+
+    def get_queryset(self) -> Any:
+        """
+        Возвращает пользователей сервиса.
+        Сортировка по дате регистрации.
+        """
+        return super().get_queryset().order_by("-date_joined")
+
+
+class UserToggleActiveView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """
+    Блокировка/разблокировка пользователя менеджером через поле is_active.
+    """
+
+    permission_required = "users.change_customuser"
+
+    def post(self, request: HttpRequest, pk: int, *args: object, **kwargs: object) -> HttpResponse:
+        user: CustomUser = get_object_or_404(CustomUser, pk=pk)
+
+        if user.pk == request.user.pk:
+            messages.error(request, "Нельзя заблокировать самого себя.")
+            return redirect(f"{reverse('users:manager_dashboard')}?tab=users")
+
+        if user.is_superuser:
+            messages.error(request, "Нельзя заблокировать суперпользователя.")
+            return redirect(f"{reverse('users:manager_dashboard')}?tab=users")
+
+        user.is_active = not user.is_active
+        user.save(update_fields=["is_active"])
+
+        messages.success(
+            request, f"Пользователь {user.email} {'разблокирован' if user.is_active else 'заблокирован'}."
+        )
+        return redirect(f"{reverse('users:manager_dashboard')}?tab=users")
+
+
+Tab = Literal["recipients", "mailings", "users"]
+
+
+class ManagerDashboardView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+    """
+    Кабинет менеджера.
+
+    Вкладки:
+    - recipients: просмотр всех получателей
+    - mailings: просмотр всех рассылок + кнопка отключить/включить
+    - users: просмотр всех пользователей + кнопка блокировки (уже реализовано отдельным view)
+
+    Доступ: пользователи с правами менеджера.
+    """
+
+    template_name = "manager_dashboard.html"
+    permission_required = (
+        "users.change_customuser",
+        "mailings.can_disable_mailing",
+    )
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        """
+        Формирует контекст кабинета менеджера в зависимости от активной вкладки.
+        """
+        context: dict[str, Any] = super().get_context_data(**kwargs)
+
+        tab: Tab = self._get_tab()
+        context["tab"] = tab
+
+        if tab == "recipients":
+            context["recipients"] = Recipient.objects.all().order_by("-id")
+        elif tab == "mailings":
+            mailings = list(
+                Mailing.objects.all().select_related("message", "owner").prefetch_related("recipients").order_by("-id")
+            )
+
+            for mailing in mailings:
+                mailing.update_status()
+
+            context["mailings"] = mailings
+
+        else:  # tab == "users"
+            context["users"] = CustomUser.objects.all().order_by("-date_joined")
+
+        return context
+
+    def _get_tab(self) -> Tab:
+        """
+        Читает вкладку из querystring. Если пришло неизвестное значение — ставим 'recipients'.
+        """
+        raw: str = (self.request.GET.get("tab") or "").strip().lower()
+        if raw in ("recipients", "mailings", "users"):
+            return raw
+        return redirect(f"{reverse('users:manager_dashboard')}?tab=mailings")
+
+
+class MailingToggleEnabledView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """
+    Включает/выключает рассылку (поле is_enabled).
+    Доступно менеджеру.
+    """
+
+    permission_required = "mailings.can_disable_mailing"
+
+    def post(self, request: HttpRequest, pk: int, *args: object, **kwargs: object) -> HttpResponse:
+        mailing: Mailing = get_object_or_404(Mailing, pk=pk)
+
+        mailing.is_enabled = not mailing.is_enabled
+        mailing.save(update_fields=["is_enabled"])
+
+        messages.success(request, f"Рассылка #{mailing.pk} {'включена' if mailing.is_enabled else 'отключена'}.")
+        return redirect("users:manager_dashboard")

@@ -12,16 +12,14 @@
                 <p><strong>Текст письма:</strong> {{ message.content }}</p>
             </div>
 
-            <div class="d-flex flex-column gap-2">
-                <a href="{% url 'mailings:message_update' message.pk %}"
-                   class="btn custom-outline-btn w-100">
-                    изменить письмо
-                </a>
-                <a href="{% url 'mailings:message_confirm_delete' message.pk %}"
-                   class="btn custom-main-btn w-100">
-                    удалить
-                </a>
-            </div>
+            {% if request.user == message.owner %}
+            <a href="{% url 'mailings:message_update' message.pk %}" class="btn btn-secondary">
+                Изменить
+            </a>
+            <a href="{% url 'mailings:message_confirm_delete' message.pk %}" class="btn btn-outline-danger">
+                Удалить
+            </a>
+            {% endif %}
 
         </div>
     </div>

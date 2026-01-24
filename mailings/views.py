@@ -2,7 +2,8 @@ from typing import Any
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Count, Q
+from django.contrib.auth.models import AbstractUser
+from django.db.models import Count, Q, QuerySet
 from django.forms import BaseModelForm
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
@@ -12,7 +13,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, T
 from django.views.generic.detail import SingleObjectMixin
 
 from mailings.forms import MailingForm, MessageForm, RecipientForm
-from mailings.models import Mailing, Message, Recipient, MailingAttempt
+from mailings.models import Mailing, MailingAttempt, Message, Recipient
 from mailings.services import send_mailing
 
 # =============================================================================
@@ -20,19 +21,24 @@ from mailings.services import send_mailing
 # =============================================================================
 
 
-class OwnerQuerySetMixin(LoginRequiredMixin):
+class OwnerQuerySetMixin:
     """
-    Миксин проверяет, является ли пользователь владельцем экземпляра модели,
-    при попытке её просмотра, изменения и удаления.
-    Название поля в полях модели должно быть "owner",
-    но может быть переопределено.
+    Миксин для ограничения queryset по владельцу.
+    - Обычный пользователь видит только свои объекты.
+    - Менеджер (по праву users.change_customuser) может просматривать все объекты.
     """
 
-    owner_field_name = "owner"
+    owner_field_name: str = "owner"
 
-    def get_queryset(self) -> Any:
-        qs = super().get_queryset()
-        return qs.filter(**{self.owner_field_name: self.request.user})
+    def get_queryset(self) -> QuerySet[Any]:
+        qs: QuerySet[Any] = super().get_queryset()
+
+        user: AbstractUser = self.request.user
+
+        if user.is_authenticated and user.has_perm("users.change_customuser"):
+            return qs
+
+        return qs.filter(**{self.owner_field_name: user})
 
 
 # =============================================================================
@@ -348,8 +354,7 @@ class MailingStatsView(LoginRequiredMixin, TemplateView):
         sent_messages_count: int = success_attempts
 
         mailings_qs = (
-            Mailing.objects
-            .filter(owner=self.request.user)
+            Mailing.objects.filter(owner=self.request.user)
             .annotate(
                 attempts_total=Count("attempts", distinct=True),
                 attempts_success=Count("attempts", filter=Q(attempts__status="success"), distinct=True),

@@ -9,38 +9,43 @@
         <div class="d-flex align-items-center gap-3">
 
             {% if user.is_authenticated %}
-                <span class="text-muted small">
+            <span class="text-muted small">
                     Привет, {{ user.first_name|default:user.email }}
                 </span>
+            {% if user.is_authenticated and perms.users.change_customuser %}
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'users:manager_dashboard' %}">
+                Кабинет менеджера
+            </a>
+            {% endif %}
 
-                <a href="{% url 'users:lk' %}"
-                   class="btn btn-outline-secondary custom-outline-btn">
-                    Личный кабинет
-                </a>
+            <a href="{% url 'users:lk' %}"
+               class="btn btn-outline-secondary custom-outline-btn">
+                Личный кабинет
+            </a>
 
-                <a href="{% url 'users:profile' %}"
-                   class="btn btn-outline-secondary custom-outline-btn">
-                    Профиль
-                </a>
+            <a href="{% url 'users:profile' %}"
+               class="btn btn-outline-secondary custom-outline-btn">
+                Профиль
+            </a>
 
-                <form method="post" action="{% url 'users:logout' %}" class="m-0">
-                    {% csrf_token %}
-                    <button type="submit"
-                            class="btn btn-outline-secondary custom-outline-btn">
-                        Выйти
-                    </button>
-                </form>
+            <form method="post" action="{% url 'users:logout' %}" class="m-0">
+                {% csrf_token %}
+                <button type="submit"
+                        class="btn btn-outline-secondary custom-outline-btn">
+                    Выйти
+                </button>
+            </form>
 
             {% else %}
-                <a href="{% url 'users:login' %}"
-                   class="btn btn-outline-secondary custom-outline-btn">
-                    Вход
-                </a>
+            <a href="{% url 'users:login' %}"
+               class="btn btn-outline-secondary custom-outline-btn">
+                Вход
+            </a>
 
-                <a href="{% url 'users:register' %}"
-                   class="btn btn-outline-secondary custom-outline-btn">
-                    Регистрация
-                </a>
+            <a href="{% url 'users:register' %}"
+               class="btn btn-outline-secondary custom-outline-btn">
+                Регистрация
+            </a>
             {% endif %}
 
         </div>
