@@ -1,13 +1,18 @@
 from typing import Any
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
 from django.urls import reverse, reverse_lazy
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
+from django.shortcuts import redirect
 from django.forms import BaseModelForm
+from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
+from django.views.generic.detail import SingleObjectMixin
 
 from mailings.forms import MailingForm, MessageForm, RecipientForm
 from mailings.models import Mailing, Message, Recipient
+from mailings.services import send_mailing
 
 # =============================================================================
 # MIXINS
@@ -317,3 +322,30 @@ class MailingDeleteView(OwnerQuerySetMixin, DeleteView):
     template_name = "mailings/mailing_confirm_delete.html"
     success_url = reverse_lazy("mailings:mailings")
     context_object_name = "mailing"
+
+# =============================================================================
+# MAILING_SEND
+# =============================================================================
+
+class MailingSendView(OwnerQuerySetMixin, SingleObjectMixin, View):
+    """
+    Ручной запуск рассылки пользователем через интерфейс.
+    Доступен только владельцу рассылки.
+    """
+
+    model = Mailing
+
+    def post(self, request: HttpRequest, pk: int, *args: object, **kwargs: object) -> HttpResponse:
+        mailing = self.get_queryset().get(pk=pk)
+
+        result = send_mailing(mailing)
+
+        if result.error:
+            messages.error(request, result.error)
+        else:
+            messages.success(
+                request,
+                f"Отправка завершена. Всего: {result.total}, успешно: {result.success}, ошибок: {result.failed}.",
+            )
+
+        return redirect("mailings:mailing_detail", pk=pk)
