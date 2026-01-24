@@ -13,6 +13,7 @@ class MailingSendResult:
     """
     Результат отправки рассылки.
     """
+
     total: int
     success: int
     failed: int

@@ -1,11 +1,11 @@
 from typing import Any
 
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.urls import reverse, reverse_lazy
-from django.http import HttpResponse, HttpRequest
-from django.shortcuts import redirect
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms import BaseModelForm
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import redirect
+from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 from django.views.generic.detail import SingleObjectMixin
@@ -51,7 +51,7 @@ class IndexView(TemplateView):
         context["recipients_count"] = Recipient.objects.count()
         context["messages_count"] = Message.objects.count()
         context["mailings_count"] = Mailing.objects.count()
-        context['mailings_running'] = Mailing.objects.filter(status=Mailing.STATUS_RUNNING).count()
+        context["mailings_running"] = Mailing.objects.filter(status=Mailing.STATUS_RUNNING).count()
 
         return context
 
@@ -323,9 +323,11 @@ class MailingDeleteView(OwnerQuerySetMixin, DeleteView):
     success_url = reverse_lazy("mailings:mailings")
     context_object_name = "mailing"
 
+
 # =============================================================================
 # MAILING_SEND
 # =============================================================================
+
 
 class MailingSendView(OwnerQuerySetMixin, SingleObjectMixin, View):
     """
