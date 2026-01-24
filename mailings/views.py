@@ -2,6 +2,7 @@ from typing import Any
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count, Q
 from django.forms import BaseModelForm
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
@@ -11,7 +12,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, T
 from django.views.generic.detail import SingleObjectMixin
 
 from mailings.forms import MailingForm, MessageForm, RecipientForm
-from mailings.models import Mailing, Message, Recipient
+from mailings.models import Mailing, Message, Recipient, MailingAttempt
 from mailings.services import send_mailing
 
 # =============================================================================
@@ -322,6 +323,48 @@ class MailingDeleteView(OwnerQuerySetMixin, DeleteView):
     template_name = "mailings/mailing_confirm_delete.html"
     success_url = reverse_lazy("mailings:mailings")
     context_object_name = "mailing"
+
+
+class MailingStatsView(LoginRequiredMixin, TemplateView):
+    """
+    Статистика по рассылкам текущего пользователя:
+    - успешные/неуспешные попытки
+    - общее число попыток
+    - количество отправленных сообщений (как число успешных отправок)
+    - статистика по каждой рассылке
+    """
+
+    template_name = "mailings/stats.html"
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context: dict[str, Any] = super().get_context_data(**kwargs)
+
+        attempts_qs = MailingAttempt.objects.filter(mailing__owner=self.request.user)
+
+        total_attempts: int = attempts_qs.count()
+        success_attempts: int = attempts_qs.filter(status="success").count()
+        failed_attempts: int = attempts_qs.filter(status="failed").count()
+
+        sent_messages_count: int = success_attempts
+
+        mailings_qs = (
+            Mailing.objects
+            .filter(owner=self.request.user)
+            .annotate(
+                attempts_total=Count("attempts", distinct=True),
+                attempts_success=Count("attempts", filter=Q(attempts__status="success"), distinct=True),
+                attempts_failed=Count("attempts", filter=Q(attempts__status="failed"), distinct=True),
+            )
+            .order_by("-start_time")
+        )
+
+        context["total_attempts"] = total_attempts
+        context["success_attempts"] = success_attempts
+        context["failed_attempts"] = failed_attempts
+        context["sent_messages_count"] = sent_messages_count
+        context["mailings_stats"] = mailings_qs
+
+        return context
 
 
 # =============================================================================
