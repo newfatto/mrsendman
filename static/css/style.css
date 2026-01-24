@@ -18,3 +18,205 @@
     object-position: center; /* центрируем */
     border-radius: 4px;
 }
+
+.form-card--wide {
+    max-width: 1100px;   /* или 1200px, под таблицы */
+}
+
+
+body {
+            background-color: #ffffff;
+        }
+
+        .brand-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            text-decoration: none;
+            color: #000;
+        }
+
+        .brand-title:hover {
+            text-decoration: underline;
+            color: #000;
+        }
+
+        .hero-subtitle {
+            color: #b3b3b3;
+            font-size: 2rem;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 600;
+        }
+
+        .hero-btn {
+            min-width: 220px;
+        }
+
+        .stat-label {
+            font-size: 0.95rem;
+        }
+
+        .stat-box {
+            display: inline-block;
+            min-width: 40px;
+            text-align: center;
+            padding: 0.15rem 0.4rem;
+            border-radius: 0.25rem;
+            border: 1px solid #ced4da;
+            background-color: #f8f9fa;
+            margin-left: 0.25rem;
+        }
+
+        /* ---- Общий стиль страниц с формами ---- */
+
+        .form-page {
+            max-width: 480px;
+            margin: 3rem auto 4rem auto;  /* центрируем и даём отступы сверху/снизу */
+        }
+
+        .form-card {
+            background-color: #ffffff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 2rem 2.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .form-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-actions {
+            margin-top: 1.5rem;
+        }
+
+        /* Основная серая кнопка */
+        .custom-main-btn {
+        background-color: #6c757d !important;
+        border-color: #6c757d !important;
+        color: #ffffff !important;
+        }
+
+        .custom-main-btn:hover {
+        background-color: #5a6268 !important;
+        border-color: #545b62 !important;
+        }
+
+        /* Контурная кнопка */
+        .custom-outline-btn {
+            border-color: #6c757d !important;
+            color: #6c757d !important;
+        }
+
+        .custom-outline-btn:hover {
+            background-color: #f2f2f2 !important;
+            color: #6c757d !important;
+            border-color: #6c757d !important;
+        }
+
+        .dashboard-list {
+        margin-top: 0.5rem;
+        }
+
+        .dashboard-item {
+        padding: 0.6rem 0;
+        border-top: 1px solid #f1f1f1;
+        }
+
+        .dashboard-item:last-child {
+        border-bottom: 1px solid #f1f1f1;
+        }
+
+        .dashboard-label {
+        margin-right: 0.25rem;
+        }
+
+        .dashboard-count {
+        font-weight: 600;
+        }
+
+        /* Более широкая страница для таблиц */
+        .table-page {
+        max-width: 900px;
+        margin: 3rem auto 4rem auto;
+            }
+
+        .table-card {
+        background-color: #ffffff;
+        border: 1px solid #e5e5e5;
+        border-radius: 12px;
+        padding: 1.5rem 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .table caption {
+        caption-side: top;
+        text-align: left;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #555;
+        }
+
+        .table thead th {
+        border-bottom-width: 1px;
+        color: #666;
+        font-weight: 500;
+        }
+
+        .table td,
+        .table th {
+            vertical-align: middle;
+        }
+
+        /* Кнопки удаления / отмены в карточках */
+        .btn-danger-soft {
+        background-color: #f8d7da;
+        border-color: #f5c2c7;
+        color: #842029;
+        }
+
+        .btn-danger-soft:hover {
+        background-color: #f5c2c7;
+        border-color: #f1aeb5;
+        color: #58151c;
+        }
+
+        .tabs {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+        }
+
+        .tab-link {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid #e5e5e5;
+        text-decoration: none;
+        color: #6c757d;
+        background-color: #ffffff;
+        font-weight: 500;
+        font-size: 0.95rem;
+        }
+
+        .tab-link:hover {
+        background-color: #f2f2f2;
+        color: #6c757d;
+        border-color: #6c757d;
+        }
+
+        .tab-link.is-active {
+        background-color: #6c757d;
+        color: #ffffff;
+        border-color: #6c757d;
+        }
+
+
+        .table-wrap {
+        overflow-x: auto;
+        }

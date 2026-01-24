@@ -6,11 +6,15 @@ from users.views import (
     ActivateUserView,
     CustomLoginView,
     CustomLogoutView,
+    MailingToggleEnabledView,
+    ManagerDashboardView,
     ProfileUpdateView,
     RegisterDoneView,
     RegisterView,
     UserDashboardView,
     UserDetailView,
+    UserListView,
+    UserToggleActiveView,
 )
 
 app_name = UsersConfig.name
@@ -61,4 +65,12 @@ urlpatterns = [
     path("profile/", UserDetailView.as_view(), name="profile"),
     path("profile/update/", ProfileUpdateView.as_view(), name="profile_update"),
     path("lk/", UserDashboardView.as_view(), name="lk"),
+    # =========================================================================
+    # MANAGERS
+    # =========================================================================
+    path("manage/", ManagerDashboardView.as_view(), name="manager_dashboard"),
+    path("manage/users/<int:pk>/toggle-active/", UserToggleActiveView.as_view(), name="user_toggle_active"),
+    path(
+        "manage/mailings/<int:pk>/toggle-enabled/", MailingToggleEnabledView.as_view(), name="mailing_toggle_enabled"
+    ),
 ]

@@ -97,6 +97,12 @@ class Mailing(models.Model):
         CustomUser, on_delete=models.CASCADE, verbose_name="Владелец", related_name="mailings"
     )
 
+    is_enabled: bool = models.BooleanField(
+        default=True,
+        verbose_name="Активна",
+        help_text="Менеджер может отключить рассылку. Отключённая рассылка не отправляется.",
+    )
+
     def calculate_status(self) -> str:
         """
         Вычисляет статус рассылки на основании текущего времени.
@@ -130,6 +136,9 @@ class Mailing(models.Model):
         verbose_name = "рассылка"
         verbose_name_plural = "рассылки"
         ordering = ["start_time"]
+        permissions = [
+            ("can_disable_mailing", "Может отключать рассылки"),
+        ]
 
 
 class MailingAttempt(models.Model):

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Статистика{% endblock %}
+
+{% block content %}
+<main class="container">
+    <div class="table-page">
+        <div class="form-card form-card--wide">
+            <h2 class="form-title mb-3">Статистика</h2>
+
+            <div class="mb-4">
+                <table class="table table-borderless mb-0">
+                    <tbody>
+                        <tr>
+                            <td class="pe-3">Всего попыток отправки:</td>
+                            <td class="text-end"><strong>{{ total_attempts }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="pe-3">Успешных:</td>
+                            <td class="text-end"><strong>{{ success_attempts }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="pe-3">Неуспешных:</td>
+                            <td class="text-end"><strong>{{ failed_attempts }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="pe-3">Отправлено сообщений:</td>
+                            <td class="text-end"><strong>{{ sent_messages_count }}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="form-title mb-3" style="font-size: 1.1rem;">По рассылкам</h3>
+
+            <div class="table-wrap">
+                <table class="table table-hover table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 22%;">Письмо</th>
+                            <th style="width: 18%;">Период</th>
+                            <th style="width: 12%;">Статус</th>
+                            <th style="width: 12%;">Всего</th>
+                            <th style="width: 12%;">Успешно</th>
+                            <th style="width: 12%;">Ошибки</th>
+                            <th class="text-end" style="width: 12%;">Детали</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mailing in mailings_stats %}
+                            <tr>
+                                <td>
+                                    {% if mailing.message %}
+                                        <a href="{% url 'mailings:message_detail' mailing.message.pk %}"
+                                           class="text-decoration-none">
+                                            {{ mailing.message.subject|truncatechars:35 }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {{ mailing.start_time|date:"d.m.Y H:i" }}<br>
+                                    {{ mailing.end_time|date:"d.m.Y H:i" }}
+                                </td>
+
+                                <td>{{ mailing.get_status_display }}</td>
+
+                                <td>{{ mailing.attempts_total }}</td>
+                                <td>{{ mailing.attempts_success }}</td>
+                                <td>{{ mailing.attempts_failed }}</td>
+
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-secondary"
+                                       href="{% url 'mailings:mailing_detail' mailing.pk %}">
+                                        открыть
+                                    </a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">
+                                    Пока нет данных по рассылкам.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</main>
+{% endblock %}

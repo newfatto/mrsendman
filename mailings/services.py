@@ -14,9 +14,9 @@ class MailingSendResult:
     Результат отправки рассылки.
     """
 
-    total: int
-    success: int
-    failed: int
+    total: int = 0
+    success: int = 0
+    failed: int = 0
     error: Optional[str] = None
 
 
@@ -38,6 +38,9 @@ def send_mailing(mailing: Mailing) -> MailingSendResult:
     now = timezone.now()
 
     mailing.update_status()
+
+    if not mailing.is_enabled:
+        return MailingSendResult(error="Рассылка отключена менеджером.")
 
     if not (mailing.start_time <= now <= mailing.end_time):
         return MailingSendResult(

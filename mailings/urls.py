@@ -8,6 +8,7 @@ from mailings.views import (
     MailingDetailView,
     MailingListView,
     MailingSendView,
+    MailingStatsView,
     MailingUpdateView,
     MessageCreateView,
     MessageDeleteView,
@@ -53,4 +54,5 @@ urlpatterns = [
     path("mailing/<int:pk>/edit/", MailingUpdateView.as_view(), name="mailing_update"),
     path("mailing/<int:pk>/confirm_delete/", MailingDeleteView.as_view(), name="mailing_confirm_delete"),
     path("mailing/<int:pk>/send/", MailingSendView.as_view(), name="mailing_send"),
+    path("stats/", MailingStatsView.as_view(), name="stats"),
 ]
