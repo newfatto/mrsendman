@@ -1,12 +1,19 @@
 from typing import Any
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.views import LoginView, LogoutView
 from django.core.mail import send_mail
-from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import get_object_or_404, redirect
+from django.template.loader import render_to_string
+from django.urls import reverse, reverse_lazy
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.views import View
 from django.views.generic import DetailView, TemplateView
 from django.views.generic.edit import CreateView, UpdateView
 
@@ -16,38 +23,82 @@ from users.models import CustomUser
 
 
 class RegisterView(CreateView):
-    """Контроллер для регистрации нового пользователя.
-    Создаёт пользователя, логинит, отправляет welcome-письмо.
+    """
+    Контроллер для регистрации нового пользователя
+    с подтверждением по email.
+    - создаёт пользователя с is_active=False
+    - отправляем письмо со ссылкой активации
+    - показываем страницу 'проверьте почту'
     """
 
     model = CustomUser
     form_class = CustomUserCreationForm
     template_name = "register.html"
-    success_url = reverse_lazy("users:lk")
+    success_url = reverse_lazy("users:register_done")
 
-    def form_valid(self, form):
-        """
-        Вызывается при валидной форме.
-        Сохраняет пользователя, логинит его и отправляет письмо.
-        """
-        response = super().form_valid(form)
-        user = self.object
-        login(self.request, user)
-        self.send_welcome_email(user.email)
-        return response
+    def form_valid(self, form: CustomUserCreationForm) -> HttpResponse:
 
-    def send_welcome_email(self, user_email):
+        user: CustomUser = form.save(commit=False)
+        user.is_active = False
+        user.save()
+
+        self._send_activation_email(request=self.request, user=user)
+
+        return redirect(self.success_url)
+
+    def _send_activation_email(self, request: HttpRequest, user: CustomUser) -> None:
         """
-        Отправляет приветственное письмо новому пользователю.
+        Отправляет письмо со ссылкой активации аккаунта.
         """
-        subject = "Добро пожаловать в Mr SandMan"
-        message = (
-            "Ура! Ты зарегистрирован на сайте. Теперь тебе доступно то, что доступно зарегистрированным пользователям"
+        uidb64: str = urlsafe_base64_encode(force_bytes(user.pk))
+        token: str = default_token_generator.make_token(user)
+
+        activation_url: str = request.build_absolute_uri(
+            reverse("users:activate", kwargs={"uidb64": uidb64, "token": token})
         )
-        recipient_list = [
-            user_email,
-        ]
-        send_mail(subject, message, settings.EMAIL_HOST_USER, recipient_list)
+
+        subject: str = "Подтверждение регистрации в Mr SendMan"
+        message: str = render_to_string(
+            "activation_email.html",
+            {"user": user, "activation_url": activation_url},
+        )
+
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+        )
+
+
+class RegisterDoneView(TemplateView):
+    """
+    Страница после регистрации: 'проверьте почту и подтвердите email'.
+    """
+
+    template_name = "activation_done.html"
+
+
+class ActivateUserView(View):
+    """
+    Активация пользователя по ссылке из письма.
+    """
+
+    def get(self, request: HttpRequest, uidb64: str, token: str, *args: object, **kwargs: object) -> HttpResponse:
+        try:
+            uid: str = urlsafe_base64_decode(uidb64).decode()
+            user: CustomUser = CustomUser.objects.get(pk=uid)
+        except (ValueError, CustomUser.DoesNotExist):
+            user = None
+
+        if user is not None and default_token_generator.check_token(user, token):
+            user.is_active = True
+            user.save(update_fields=["is_active"])
+            messages.success(request, "Email подтверждён. Теперь вы можете войти.")
+            return redirect("users:login")
+
+        messages.error(request, "Ссылка активации недействительна или устарела.")
+        return redirect("users:register")
 
 
 class CustomLoginView(LoginView):

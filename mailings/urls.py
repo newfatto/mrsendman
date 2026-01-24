@@ -7,6 +7,7 @@ from mailings.views import (
     MailingDeleteView,
     MailingDetailView,
     MailingListView,
+    MailingSendView,
     MailingUpdateView,
     MessageCreateView,
     MessageDeleteView,
@@ -17,7 +18,7 @@ from mailings.views import (
     RecipientDeleteView,
     RecipientDetailView,
     RecipientListView,
-    RecipientUpdateView, MailingSendView,
+    RecipientUpdateView,
 )
 
 app_name = MailingsConfig.name
@@ -27,7 +28,6 @@ urlpatterns = [
     # INDEX
     # =========================================================================
     path("", IndexView.as_view(), name="index"),
-
     # =========================================================================
     # RECIPIENTS
     # =========================================================================
@@ -36,7 +36,6 @@ urlpatterns = [
     path("recipients/<int:pk>/", RecipientDetailView.as_view(), name="recipient_detail"),
     path("recipients/<int:pk>/edit/", RecipientUpdateView.as_view(), name="recipient_update"),
     path("recipients/<int:pk>/confirm_delete/", RecipientDeleteView.as_view(), name="recipient_confirm_delete"),
-
     # =========================================================================
     # MESSAGES
     # =========================================================================
@@ -45,7 +44,6 @@ urlpatterns = [
     path("message/<int:pk>/", MessageDetailView.as_view(), name="message_detail"),
     path("message/<int:pk>/edit/", MessageUpdateView.as_view(), name="message_update"),
     path("message/<int:pk>/confirm_delete/", MessageDeleteView.as_view(), name="message_confirm_delete"),
-
     # =========================================================================
     # MAILINGS
     # =========================================================================
@@ -54,6 +52,5 @@ urlpatterns = [
     path("mailing/<int:pk>/", MailingDetailView.as_view(), name="mailing_detail"),
     path("mailing/<int:pk>/edit/", MailingUpdateView.as_view(), name="mailing_update"),
     path("mailing/<int:pk>/confirm_delete/", MailingDeleteView.as_view(), name="mailing_confirm_delete"),
-
     path("mailing/<int:pk>/send/", MailingSendView.as_view(), name="mailing_send"),
 ]

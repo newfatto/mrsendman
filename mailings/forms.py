@@ -165,22 +165,16 @@ class MailingForm(OwnerFormMixin, StyleFormMixin, forms.ModelForm):
 
         super().__init__(*args, **kwargs)
 
-        self.fields["recipients"].help_text = (
-            "Можно выбрать несколько получателей (зажмите Ctrl или Cmd)"
-        )
+        self.fields["recipients"].help_text = "Можно выбрать несколько получателей (зажмите Ctrl или Cmd)"
         self.fields["recipients"].widget.attrs.update({"size": 6})
 
         if getattr(self.instance, "pk", None):
             tz = timezone.get_current_timezone()
 
             if self.instance.start_time:
-                self.initial["start_time"] = (
-                    self.instance.start_time.astimezone(tz).strftime("%Y-%m-%dT%H:%M")
-                )
+                self.initial["start_time"] = self.instance.start_time.astimezone(tz).strftime("%Y-%m-%dT%H:%M")
             if self.instance.end_time:
-                self.initial["end_time"] = (
-                    self.instance.end_time.astimezone(tz).strftime("%Y-%m-%dT%H:%M")
-                )
+                self.initial["end_time"] = self.instance.end_time.astimezone(tz).strftime("%Y-%m-%dT%H:%M")
 
         if self.user is not None:
             self.fields["message"].queryset = Message.objects.filter(owner=self.user)
