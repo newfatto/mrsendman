@@ -11,6 +11,10 @@ from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 from django.views.generic.detail import SingleObjectMixin
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
+from django.core.cache import cache
+
 
 from mailings.forms import MailingForm, MessageForm, RecipientForm
 from mailings.models import Mailing, MailingAttempt, Message, Recipient
@@ -45,7 +49,7 @@ class OwnerQuerySetMixin:
 # INDEX / PUBLIC PAGES
 # =============================================================================
 
-
+@method_decorator(cache_page(60 * 15), name='dispatch')
 class IndexView(TemplateView):
     template_name = "index.html"
 

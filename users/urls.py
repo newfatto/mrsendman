@@ -1,5 +1,6 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
+from django.views.decorators.cache import cache_page
 
 from users.apps import UsersConfig
 from users.views import (
@@ -68,7 +69,7 @@ urlpatterns = [
     # =========================================================================
     # MANAGERS
     # =========================================================================
-    path("manage/", ManagerDashboardView.as_view(), name="manager_dashboard"),
+    path("manage/", cache_page(30)(ManagerDashboardView.as_view()), name="manager_dashboard"),
     path("manage/users/<int:pk>/toggle-active/", UserToggleActiveView.as_view(), name="user_toggle_active"),
     path(
         "manage/mailings/<int:pk>/toggle-enabled/", MailingToggleEnabledView.as_view(), name="mailing_toggle_enabled"

@@ -15,6 +15,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
 from django.views.generic.edit import CreateView, UpdateView
+from django.core.cache import cache
 
 from mailings.models import Mailing, MailingAttempt, Message, Recipient
 from users.forms import CustomUserAuthenticationForm, CustomUserCreationForm, UserUpdateForm
@@ -36,7 +37,6 @@ class RegisterView(CreateView):
     success_url = reverse_lazy("users:register_done")
 
     def form_valid(self, form: CustomUserCreationForm) -> HttpResponse:
-
         user: CustomUser = form.save(commit=False)
         user.is_active = False
         user.save()
@@ -242,15 +242,23 @@ class ManagerDashboardView(LoginRequiredMixin, PermissionRequiredMixin, Template
         context["tab"] = tab
 
         if tab == "recipients":
-            context["recipients"] = Recipient.objects.all().order_by("-id")
+            cache_key: str = "manager:recipients"
+            recipients = cache.get(cache_key)
+            if recipients is None:
+                recipients = Recipient.objects.all().select_related("owner").order_by("-id")
+                cache.set(cache_key, recipients, 60)  # 60 сек
+            context["recipients"] = recipients
         elif tab == "mailings":
-            mailings = list(
-                Mailing.objects.all().select_related("message", "owner").prefetch_related("recipients").order_by("-id")
-            )
-
-            for mailing in mailings:
-                mailing.update_status()
-
+            cache_key: str = "manager:mailings"
+            mailings = cache.get(cache_key)
+            if mailings is None:
+                mailings = (
+                    Mailing.objects.all()
+                    .select_related("owner", "message")
+                    .prefetch_related("recipients")
+                    .order_by("-id")
+                )
+                cache.set(cache_key, mailings, 60)
             context["mailings"] = mailings
 
         else:  # tab == "users"
