@@ -114,11 +114,22 @@ LOGOUT_REDIRECT_URL = "/"
 
 LOGIN_URL = "users:login"
 
-CACHE_ENABLED = True
+CACHE_ENABLED: bool = os.getenv("CACHE_ENABLED", "1") == "1"
+
 if CACHE_ENABLED:
     CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.redis.RedisCache",
-            "LOCATION": "redis://127.0.0.1:6379/1",
+            "LOCATION": os.getenv("REDIS_URL", "redis://127.0.0.1:6379/1"),
         }
     }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "mrsendman-cache",
+        }
+    }
+
+CACHE_TTL_INDEX: int = int(os.getenv("CACHE_TTL_INDEX", "60"))
+CACHE_TTL_STATS: int = int(os.getenv("CACHE_TTL_STATS", "60"))
