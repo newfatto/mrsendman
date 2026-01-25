@@ -8,13 +8,12 @@ from django.forms import BaseModelForm
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.cache import cache_page
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 from django.views.generic.detail import SingleObjectMixin
-from django.views.decorators.cache import cache_page
-from django.utils.decorators import method_decorator
-from django.core.cache import cache
-
 
 from mailings.forms import MailingForm, MessageForm, RecipientForm
 from mailings.models import Mailing, MailingAttempt, Message, Recipient
@@ -49,7 +48,8 @@ class OwnerQuerySetMixin:
 # INDEX / PUBLIC PAGES
 # =============================================================================
 
-@method_decorator(cache_page(60 * 15), name='dispatch')
+
+@method_decorator(cache_page(60 * 15), name="dispatch")
 class IndexView(TemplateView):
     template_name = "index.html"
 
@@ -308,6 +308,46 @@ class MailingDetailView(OwnerQuerySetMixin, DetailView):
         obj = super().get_object(queryset)
         obj.update_status()
         return obj
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        """
+        Добавляем текущее время в контекст для отображения кнопки запуска.
+        """
+        context: dict[str, Any] = super().get_context_data(**kwargs)
+        context["now"] = timezone.now()
+        return context
+
+    def post(self, request: HttpRequest, *args: object, **kwargs: object) -> HttpResponse:
+        """
+        Запускает рассылку вручную (только владелец, только в период, только если включена).
+        """
+        mailing: Mailing = self.get_object()
+
+        # Доп. защита на сервере, даже если кнопку “подделают”
+        now = timezone.now()
+        if request.user != mailing.owner:
+            messages.error(request, "У вас нет прав на запуск этой рассылки.")
+            return redirect("mailings:mailing_detail", pk=mailing.pk)
+
+        if not mailing.is_enabled:
+            messages.error(request, "Рассылка отключена менеджером и не может быть запущена.")
+            return redirect("mailings:mailing_detail", pk=mailing.pk)
+
+        if not (mailing.start_time <= now <= mailing.end_time):
+            messages.error(request, "Рассылку можно запускать только в заданный период.")
+            return redirect("mailings:mailing_detail", pk=mailing.pk)
+
+        result = send_mailing(mailing)
+
+        if result.error:
+            messages.error(request, result.error)
+        else:
+            messages.success(
+                request,
+                f"Отправка завершена. Всего: {result.total}, успешно: {result.success}, ошибок: {result.failed}.",
+            )
+
+        return redirect("mailings:mailing_detail", pk=mailing.pk)
 
 
 class MailingUpdateView(OwnerQuerySetMixin, UpdateView):
