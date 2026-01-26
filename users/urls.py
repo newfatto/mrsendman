@@ -14,7 +14,6 @@ from users.views import (
     RegisterView,
     UserDashboardView,
     UserDetailView,
-    UserListView,
     UserToggleActiveView,
 )
 

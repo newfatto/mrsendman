@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.views import LoginView, LogoutView
+from django.core.cache import cache
 from django.core.mail import send_mail
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -15,9 +16,8 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
 from django.views.generic.edit import CreateView, UpdateView
-from django.core.cache import cache
 
-from mailings.models import Mailing, MailingAttempt, Message, Recipient
+from mailings.models import Mailing, Message, Recipient
 from users.forms import CustomUserAuthenticationForm, CustomUserCreationForm, UserUpdateForm
 from users.models import CustomUser
 

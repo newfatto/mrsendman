@@ -32,12 +32,18 @@
 
             <div class="d-flex flex-column gap-2">
                 {% if request.user == mailing.owner %}
-                <form method="post" action="{% url 'mailings:mailing_send' mailing.pk %}">
+                {% if mailing.is_enabled and mailing.start_time <= now and now <= mailing.end_time %}
+                <form method="post">
                     {% csrf_token %}
                     <button type="submit" class="btn custom-main-btn w-100">
                         запустить
                     </button>
                 </form>
+                {% else %}
+                <p class="text-muted text-center">
+                    Рассылка может быть запущена только в заданный период
+                </p>
+                {% endif %}
                 <a href="{% url 'mailings:mailing_update' mailing.pk %}" class="btn btn-secondary">
                     Изменить
                 </a>
