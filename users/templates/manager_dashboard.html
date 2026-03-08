@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Кабинет менеджера{% endblock %}
+
+{% block content %}
+<main class="container">
+    <div class="table-page">
+        <div class="table-card">
+
+            <h2 class="form-title mb-3">Кабинет менеджера</h2>
+
+            <div class="tabs">
+                <a class="tab-link {% if tab == 'recipients' %}is-active{% endif %}"
+                   href="{% url 'users:manager_dashboard' %}?tab=recipients">
+                    Получатели
+                </a>
+                <a class="tab-link {% if tab == 'mailings' %}is-active{% endif %}"
+                   href="{% url 'users:manager_dashboard' %}?tab=mailings">
+                    Рассылки
+                </a>
+                <a class="tab-link {% if tab == 'users' %}is-active{% endif %}"
+                   href="{% url 'users:manager_dashboard' %}?tab=users">
+                    Пользователи
+                </a>
+            </div>
+
+            {% if tab == 'recipients' %}
+            <div class="table-wrap">
+                <table class="table table-sm align-middle">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Email</th>
+                        <th>ФИО</th>
+                        <th>Владелец</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for r in recipients %}
+                    <tr>
+                        <td>{{ r.id }}</td>
+                        <td>
+                            <a href="{% url 'mailings:recipient_detail' r.pk %}">{{ r.email }}</a>
+                        </td>
+                        <td>{{ r.full_name }}</td>
+                        <td>{{ r.owner.email }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-muted">Нет получателей.</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% elif tab == 'mailings' %}
+            <div class="table-wrap">
+                <table class="table table-sm align-middle">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Статус</th>
+                        <th>Владелец</th>
+                        <th>Период</th>
+                        <th>Активна</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    {% for m in mailings %}
+                    <tr>
+                        <td><a href="{% url 'mailings:mailing_detail' m.pk %}">{{ m.id }}</a></td>
+                        <td>{{ m.get_status_display }}</td>
+                        <td>{{ m.owner.email }}</td>
+                        <td>{{ m.start_time|date:"d.m.Y H:i" }} — {{ m.end_time|date:"d.m.Y H:i" }}</td>
+                        <td>{% if m.is_enabled %}Да{% else %}Нет{% endif %}</td>
+                        <td class="text-end">
+                            <form method="post" action="{% url 'users:mailing_toggle_enabled' m.pk %}">
+                                {% csrf_token %}
+                                <button type="submit"
+                                        class="btn btn-sm {% if m.is_enabled %}btn-danger-soft{% else %}btn-secondary{% endif %}">
+                                    {% if m.is_enabled %}Отключить{% else %}Включить{% endif %}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-muted">Нет рассылок.</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% else %}
+            <div class="table-wrap">
+                <table class="table table-sm align-middle">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Email</th>
+                        <th>Активен</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>{{ u.id }}</td>
+                        <td>{{ u.email }}</td>
+                        <td>{% if u.is_active %}Да{% else %}Нет{% endif %}</td>
+                        <td class="text-end">
+                            <form method="post" action="{% url 'users:user_toggle_active' u.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                    {% if u.is_active %}Заблокировать{% else %}Разблокировать{% endif %}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-muted">Нет пользователей.</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</main>
+{% endblock %}

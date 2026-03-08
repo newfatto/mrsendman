@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}Письма{% endblock %}
+
+{% block content %}
+<main class="container">
+
+    <div class="table-page">
+        <div class="table-card">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="form-title mb-0">Письма</h2>
+                <a href="{% url 'mailings:message_create' %}"
+                   class="btn custom-main-btn btn-sm">
+                    Добавить письмо
+                </a>
+            </div>
+
+            <table class="table table-hover table-sm caption-top mb-0">
+                <caption>Ваши письма</caption>
+                <thead>
+                    <tr>
+                        <th scope="col" style="width: 4%;">#</th>
+                        <th scope="col" style="width: 36%;">Заголовок</th>
+                        <th scope="col" style="width: 30%;">Дата создания</th>
+                        <th scope="col" class="text-end" style="width: 30%;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for message in messages %}
+                    <tr>
+                        <th scope="row">{{ forloop.counter }}</th>
+                        <td>{{ message.subject }}</td>
+                        <td>{{ message.created_at }}</td>
+                        <td>
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{% url 'mailings:message_detail' message.pk %}"
+                                   class="btn btn-sm custom-outline-btn">
+                                    подробности
+                                </a>
+                                <a href="{% url 'mailings:message_update' message.pk %}"
+                                   class="btn btn-sm custom-outline-btn">
+                                    редактировать
+                                </a>
+                                <a href="{% url 'mailings:message_confirm_delete' message.pk %}"
+                                   class="btn btn-sm custom-main-btn">
+                                    удалить
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">
+                            У вас пока нет писем.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Навигация по страницам">
+            <ul class="pagination justify-content-center mt-4">
+
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">«</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">«</span>
+                </li>
+                {% endif %}
+
+                {% for page_num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == page_num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">»</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">»</span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+
+</main>
+{% endblock %}

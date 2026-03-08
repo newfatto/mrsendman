@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная страница{% endblock %}
+
+{% block content %}
+
+<main class="container text-center mt-5">
+    <!-- Название -->
+    <h3 class="hero-subtitle mb-3">Mr SendMan</h3>
+
+    <!-- Главный слоган -->
+    <h1 class="hero-title mb-4">
+        Сервис рассылок для тех, кому есть, <br>
+        что сказать своим клиентам.
+    </h1>
+
+    <!-- Статистика -->
+    <!-- Блок статистики -->
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-auto">
+
+                <!-- Таблица для ровного выравнивания -->
+                <table class="table table-borderless text-end">
+                    <tbody>
+                    <tr>
+                        <td class="pe-3 stat-label">сообщений создано на нашем сервисе:</td>
+                        <td><span class="stat-box">{{ messages_count }}</span></td>
+                    </tr>
+                    <tr>
+                        <td class="pe-3 stat-label">рассылок создали наши пользователи:</td>
+                        <td><span class="stat-box">{{ mailings_count }}</span></td>
+                    </tr>
+                    <tr>
+                        <td class="pe-3 stat-label">рассылок сейчас рассылается:</td>
+                        <td><span class="stat-box">{{ mailings_running }}</span></td>
+                    </tr>
+                    <tr>
+                        <td class="pe-3 stat-label">клиентов информируется:</td>
+                        <td><span class="stat-box">{{ recipients_count }}</span></td>
+                    </tr>
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    </div>
+
+
+</main>
+
+{% endblock %}

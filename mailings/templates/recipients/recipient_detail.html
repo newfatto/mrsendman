@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Информация о получателе{% endblock %}
+
+{% block content %}
+<main class="container">
+    <div class="form-page">
+        <div class="form-card">
+
+            <h2 class="form-title mb-4">Информация о получателе</h2>
+
+            <div class="mb-4">
+                <p><strong>Полное имя:</strong> {{ recipient.full_name }}</p>
+                <p><strong>Email:</strong> {{ recipient.email }}</p>
+                <p><strong>Комментарий:</strong> {{ recipient.comment }}</p>
+                <p><strong>Получатель добавлен:</strong> {{ recipient.created_at }}</p>
+            </div>
+
+            {% if request.user == recipient.owner %}
+            <a href="{% url 'mailings:recipient_update' recipient.pk %}" class="btn btn-secondary">
+                Изменить
+            </a>
+            <a href="{% url 'mailings:recipient_confirm_delete' recipient.pk %}" class="btn btn-outline-danger">
+                Удалить
+            </a>
+            {% endif %}
+
+        </div>
+    </div>
+</main>
+{% endblock %}

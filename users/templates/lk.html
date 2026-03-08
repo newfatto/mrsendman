@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Личный кабинет{% endblock %}
+
+{% block content %}
+<main class="container">
+    <div class="form-page">
+        <div class="form-card">
+
+            <h2 class="form-title mb-3">Личный кабинет</h2>
+            <p class="mb-4">
+                Здравствуйте, {{ request.user.first_name|default:request.user.email }}!
+            </p>
+
+            <div class="dashboard-list">
+
+                <!-- Получатели -->
+                <div class="dashboard-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="dashboard-label">Получателей:</span>
+                        <span class="dashboard-count">{{ recipients_count }}</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'mailings:recipients' %}"
+                           class="btn btn-sm custom-outline-btn">
+                            посмотреть
+                        </a>
+                        <a href="{% url 'mailings:recipient_create' %}"
+                           class="btn btn-sm custom-main-btn">
+                            добавить
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Письма -->
+                <div class="dashboard-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="dashboard-label">Писем:</span>
+                        <span class="dashboard-count">{{ messages_count }}</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'mailings:messages' %}"
+                           class="btn btn-sm custom-outline-btn">
+                            посмотреть
+                        </a>
+                        <a href="{% url 'mailings:message_create' %}"
+                           class="btn btn-sm custom-main-btn">
+                            добавить
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Рассылки -->
+                <div class="dashboard-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="dashboard-label">Рассылок:</span>
+                        <span class="dashboard-count">{{ mailings_count }}</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'mailings:mailings' %}"
+                           class="btn btn-sm custom-outline-btn">
+                            посмотреть
+                        </a>
+                        <a href="{% url 'mailings:mailing_create' %}"
+                           class="btn btn-sm custom-main-btn">
+                            добавить
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <a href="{% url 'mailings:stats' %}" class="btn btn-outline-secondary w-100">
+                        Статистика
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</main>
+{% endblock %}
